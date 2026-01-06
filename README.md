@@ -1,110 +1,205 @@
-[![wanetscode/dynamic-server - GitHub](https://gh-card.dev/repos/wanetscode/dynamic-server.svg)](https://github.com/wanetscode/dynamic-server)
-
-[![Version](https://img.shields.io/badge/Version%20number:-v1-red.svg)](https://wnts.pages.dev)
-
-
-[![AGPL License](https://img.shields.io/badge/Licensed-AGPL-blue.svg)](http://www.gnu.org/licenses/agpl-3.0)
-
 # Dynamic Server v1.0
 
-The easiest way to host a temporary or permanent server on any device and network with file editing, API request handling and read requests with no need of advanced server knowledge
+[![View dynamic-server on GitHub](https://img.shields.io/github/stars/wanetscode/dynamic-server?color=232323&label=dynamic-server&logo=github&labelColor=232323)](https://github.com/wanetscode/dynamic-server) [![Author wanetscode](https://img.shields.io/badge/wanetscode-b820f9?labelColor=b820f9&logo=githubsponsors&logoColor=fff)](https://github.com/wanetscode) 
+[![License](https://img.shields.io/badge/License-AGPL-blue.svg)](http://www.gnu.org/licenses/agpl-3.0)
 
-
+The easiest way to host a temporary or permanent server on any device and network. Edit files, handle API requests, and serve content—no advanced server knowledge required.
 
 ## Deployment
 
-1. Download the server CLI
+1. **Download the server CLI**
 
 ```bash
-  curl wnts.pages.dev/install.ps1
+curl wnts.pages.dev/install.ps1
 ```
 
-2. Pick any directory to host
+2. **Choose a directory to host**
 
 ```bash
-  cd C:/Path/To/My/Dir
+cd C:/Path/To/My/Dir
 ```
 
-3. Host it privately or publicly with a custom port
+3. **Host it locally, publicly, or on a custom port**
 
+**Local (default port 8000):**
+```bash
+dynser start
+```
 
-Local:
+**Public (requires nameserver):**
 ```bash
-  dynser start
+dynser start --public [nameserver]
 ```
-Public:
+
+**Custom Port:**
 ```bash
-  dynser start --public [nameserver]
-```
-Custom Port:
-```bash
-  dynser start --port [portid]
+dynser start --port [portid]
 ```
 
 ## API Reference
 
-#### Read file data
+### Read file data
 
 ```http
-  http://localhost:8000/api/read?[directory]
+GET http://localhost:8000/api/read?path=[filepath]
 ```
 
-| Parameter | Type     | Description                |
+| Parameter | Type | Description |
 | :-------- | :------- | :------------------------- |
-| `directory` | `URL` | Example: for http://localhost:8000/edit/test/ab.txt is http://localhost:8000/api/read?test/ab.txt|
+| `filepath` | `string` | File path relative to server root. Example: `test/ab.txt` |
 
-Result: Plain text
+**Result**: File contents (HTML files, images, and JSON may be previewed instead of downloaded depending on browser. Append `view-source:` prefix to view raw content: `view-source:http://localhost:8000/api/read?test/ab.txt`)
 
-
-#### Read file data
+### Read file metadata
 
 ```http
-  http://localhost:8000/api/metadata?[directory]
+GET http://localhost:8000/api/metadata?path=[filepath]
 ```
 
-| Parameter | Type     | Description                |
+| Parameter | Type | Description |
 | :-------- | :------- | :------------------------- |
-| `directory` | `URL` | Example: for http://localhost:8000/edit/test/ab.txt is http://localhost:8000/api/metadata?test/ab.txt|
+| `filepath` | `string` | File path relative to server root. Example: `test/ab.txt` |
 
-Result: Json
+**Result**: JSON object
 
-Example Result: `{"name": "ab.txt", "size": 2, "size_formatted": "2.0 B", "modified": "2025-12-12 20:13:36", "created": "2025-12-10 18:57:14", "type": ".txt"}`
+**Example Response:**
+```json
+{
+  "name": "ab.txt",
+  "size": 2,
+  "size_formatted": "2.0 B",
+  "modified": "2025-12-12 20:13:36",
+  "created": "2025-12-10 18:57:14",
+  "type": ".txt"
+}
+```
 
+### Create new file
 
+```http
+POST http://localhost:8000/api/create?path=[directory]&filename=[filename]
+```
 
+| Parameter | Type | Description |
+| :-------- | :------- | :------------------------- |
+| `directory` | `string` | Folder path relative to root. Example: `test` |
+| `filename` | `string` | Name of file to create. Example: `ab.txt` |
 
-:Note to self- finish API docs
+**Result**: File created (no response body)
 
+**Example Request:**
+```bash
+curl -X POST "http://localhost:8000/api/create?path=test&filename=ab.txt"
+```
+
+### Edit file
+
+```http
+POST http://localhost:8000/api/save?path=[filepath]
+```
+
+| Parameter | Type | Description |
+| :-------- | :------- | :------------------------- |
+| `filepath` | `string` | File path relative to server root. Example: `test/ab.txt` |
+
+**Request Body**: New file content as plain text.
+
+**Result**: `"OK"` (File saved successfully)
+
+**Example Request:**
+```bash
+curl -X POST \
+  "http://localhost:8000/api/save?path=test/ab.txt" \
+  -H "Content-Type: text/plain" \
+  -d "This is the new content of the file"
+```
+
+**Alternative Method**: Use the web interface at `http://localhost:8000/edit/[filepath]` (e.g., `http://localhost:8000/edit/test/ab.txt`).
+
+### Clear logs
+
+```http
+POST http://localhost:8000/api/logs/clear
+```
+
+**Result**: Logs cleared (no response body)
+
+### Get logs
+
+```http
+GET http://localhost:8000/api/logs
+```
+
+**Result**: JSON object containing recent log entries
+
+### Get history
+
+```http
+GET http://localhost:8000/api/history
+```
+
+**Result**: JSON array of recent file changes (last 5 actions)
+
+### List files in directory
+
+```http
+GET http://localhost:8000/api/list?path=[directory]
+```
+
+| Parameter | Type | Description |
+| :-------- | :------- | :------------------------- |
+| `directory` | `string` | Folder path relative to root. Example: `test` |
+
+**Result**: JSON array of file/directory objects
+
+**Example Response:**
+```json
+[
+  {
+    "name": "directory",
+    "path": "test\\directory",
+    "is_dir": true,
+    "modified": 1765388921
+  },
+  {
+    "name": "yipee.txt",
+    "path": "test\\ab.txt",
+    "is_dir": false,
+    "modified": 1765563216
+  }
+]
+```
 
 ## Authors
 
-- [@wanetscode](https://www.github.com/wanetscode)
-- [@repostudio](https://www.github.com/repostudio)
-
+- **Written by**: [@WanetsCode](https://www.github.com/wanetscode)
+- **Contributions & commit management**: [@RepoStudio](https://www.github.com/repostudio)
+- **Written in**: [@Python](https://github.com/python)
 
 ## FAQ
 
-#### Is it free?
+#### Is Dynamic Server free?
+Yes, completely free. The server runs on your machine, so there are no hosting fees.
 
-Yes completely free, because it runs on your machine only.
+#### How do I get 24/7 server uptime?
+To keep your server running permanently:
+- Ensure the device stays powered on
+- Set up automatic script restart in case of power loss or crashes
+- Consider using process managers like `pm2` (Node.js) or supervisor daemons
 
-#### How to get 24/7 servers?
+#### Can I host this on a VPS or cloud server?
+Yes! Dynamic Server works on any device with Python, including cloud VPS instances, Raspberry Pi, or old computers.
 
-To keep your server open permanently make sure that the device it is being run on is onstantly ON and the script reruns incase of sudden power loss
-
+#### Is it secure for public hosting?
+While suitable for development and personal use, consider adding authentication and HTTPS for sensitive data in production environments.
 
 ## Feedback
 
-If you have any feedback, found any bugs or have a suggestion please make an issue
-
-##
-[![MIT License](https://img.shields.io/badge/Powered%20by-Dynamic%20Server-red.svg)](https://wnts.pages.dev)
-
-[![GPLv3 License](https://img.shields.io/badge/Public%20host%20status-Working-green.svg)](https://wnts.pages.dev/host)
-
-[![AGPL License](https://img.shields.io/badge/Licensed-AGPL-blue.svg)](http://www.gnu.org/licenses/agpl-3.0)
-
+Found a bug? Have a suggestion? Please [create an issue](https://github.com/wanetscode/dynamic-server/issues) on GitHub.
 
 ## Sponsors
 
-[Support dynamic server and it's development](https://thanks.dev/u/gh/wanetscode) and get your name/company written down here
+Support Dynamic Server development and get your name featured here!
+
+[![Sponsor](https://img.shields.io/badge/Sponsor-Thanks.dev-orange.svg)](https://thanks.dev/u/gh/wanetscode)
+
