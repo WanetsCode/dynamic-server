@@ -1,5 +1,10 @@
 [![wanetscode/dynamic-server - GitHub](https://gh-card.dev/repos/wanetscode/dynamic-server.svg)](https://github.com/wanetscode/dynamic-server)
 
+[![Version](https://img.shields.io/badge/Version%20number:-v1-red.svg)](https://wnts.pages.dev)
+
+
+[![AGPL License](https://img.shields.io/badge/Licensed-AGPL-blue.svg)](http://www.gnu.org/licenses/agpl-3.0)
+
 # Dynamic Server v1.0
 
 The easiest way to host a temporary or permanent server on any device and network with file editing, API request handling and read requests with no need of advanced server knowledge
