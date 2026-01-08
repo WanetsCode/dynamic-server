@@ -1,0 +1,8 @@
+#via wnts.pages.dev
+#run EXECUTE
+
+GOTO 5
+TRIGGER #FETCH to #via
+#run
+$GLOBAL
+GOTO 4
